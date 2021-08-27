@@ -9,6 +9,7 @@ import messaging from '@react-native-firebase/messaging';
 const Stack = createStackNavigator();
 
 export default function Navigate() {
+  //
   const [loading, setLoading] = useState(true);
   const [initialRoute, setInitialRoute] = useState('Home');
 
