@@ -13,34 +13,45 @@ export default function Navigate() {
   const [loading, setLoading] = useState(true);
   const [initialRoute, setInitialRoute] = useState('Home');
 
+  async function requestUserPermission() {
+    const authStatus = await messaging().requestPermission();
+    const enabled =
+      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+  
+    if (enabled) {
+      messaging().onNotificationOpenedApp(remoteMessage => {
+        console.log(
+          'Notification caused app to open from background state:',
+          remoteMessage.notification,
+        );
+        setInitialRoute('Home');
+      });
+  
+      // Check whether an initial notification is available
+      messaging()
+        .getInitialNotification()
+        .then(remoteMessage => {
+          if (remoteMessage) {
+            console.log(
+              'Notification caused app to open from quit state:',
+              remoteMessage.notification,
+            );
+            setInitialRoute('Settings'); // e.g. "Settings"
+          }
+          setLoading(false);
+        });
+  
+        messaging().onMessage(async remoteMessage => {
+          Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage));
+        });
+    }
+  }
+
   useEffect(() => {
     // Assume a message-notification contains a "type" property in the data payload of the screen to open
 
-    messaging().onNotificationOpenedApp(remoteMessage => {
-      console.log(
-        'Notification caused app to open from background state:',
-        remoteMessage.notification,
-      );
-      setInitialRoute('Home');
-    });
-
-    // Check whether an initial notification is available
-    messaging()
-      .getInitialNotification()
-      .then(remoteMessage => {
-        if (remoteMessage) {
-          console.log(
-            'Notification caused app to open from quit state:',
-            remoteMessage.notification,
-          );
-          setInitialRoute('Settings'); // e.g. "Settings"
-        }
-        setLoading(false);
-      });
-
-      messaging().onMessage(async remoteMessage => {
-        Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage));
-      });
+    requestUserPermission();
   }, []);
 
   if (loading) {
